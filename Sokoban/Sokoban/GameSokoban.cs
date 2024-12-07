@@ -1,26 +1,24 @@
-//Sokoban/SokobanGame.cs
-
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Sokoban.Game;
 using Sokoban.Model;
 using Sokoban.Model.GameObjects;
 using Sokoban.Utils;
 
 namespace Sokoban;
 
-public class SokobanGame : Microsoft.Xna.Framework.Game
+public class GameSokoban : Microsoft.Xna.Framework.Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    
     private Player _player;
     private List<LevelData> _levels;
     private Level _level;
     private Texture2D _wallTexture, _playerTexture, _boxTexture, _goalTexture;
-
-    public SokobanGame()
+    public GameSokoban()
     {
         _graphics = new GraphicsDeviceManager(this)
         {
@@ -28,13 +26,14 @@ public class SokobanGame : Microsoft.Xna.Framework.Game
             PreferredBackBufferHeight = 600
         };
         Content.RootDirectory = "Content";
+        IsMouseVisible = true;
     }
 
     protected override void Initialize()
     {
         base.Initialize();
     }
-    
+
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -42,10 +41,9 @@ public class SokobanGame : Microsoft.Xna.Framework.Game
         // Загрузка текстур
         _wallTexture = Content.Load<Texture2D>("wall");
         _playerTexture = Content.Load<Texture2D>("player");
-        _boxTexture = Content.Load<Texture2D>("box");
+        _boxTexture = Content.Load<Texture2D>("block");
         _goalTexture = Content.Load<Texture2D>("goal");
-
-        // Инициализация уровня
+        
         _level = new Level("Level 1", _wallTexture, _playerTexture, _boxTexture, _goalTexture);
         
         _player = _level.Objects.OfType<Player>().FirstOrDefault();
@@ -54,7 +52,7 @@ public class SokobanGame : Microsoft.Xna.Framework.Game
             throw new InvalidOperationException("Level does not contain a Player object.");
         }
     }
-    
+
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
@@ -62,7 +60,7 @@ public class SokobanGame : Microsoft.Xna.Framework.Game
         {
             Exit();
         }
-        
+
         InputHandler.HandleInput(gameTime, _player);
 
         base.Update(gameTime);
