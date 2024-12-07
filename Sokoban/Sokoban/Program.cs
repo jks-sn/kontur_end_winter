@@ -1,22 +1,14 @@
-﻿//Sokoban/Program.cs
-
-using Sokoban.ConsoleApp;
-using Sokoban.Utils;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Sokoban;
-
-class Program
+public static class Program
 {
-    static void Main(string[] args)
+    [STAThread]
+    static void Main()
     {
-        const string levelData = "#######\n" +
-                                 "#     #\n" +
-                                 "# $ @ #\n" +
-                                 "#  .  #\n" +
-                                 "#######\n";
-        
-        var level = LevelLoader.LoadLevel(levelData);
-        
-        GameConsole.RunGame(level);
+        using (var game = new SokobanGame())
+            game.Run();
     }
 }

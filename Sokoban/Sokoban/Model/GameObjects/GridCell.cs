@@ -1,6 +1,6 @@
-//Sokoban/Model/GridCell.cs
+//Sokoban/Model/GameObject/GridCell.cs
 
-namespace Sokoban.Model;
+namespace Sokoban.Model.GameObjects;
     public enum GridCell
     {
         Empty,

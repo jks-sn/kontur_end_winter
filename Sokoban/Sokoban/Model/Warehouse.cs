@@ -1,5 +1,7 @@
 //Sokoban/Model/Warehouse.cs
 
+using Sokoban.Model.GameObjects;
+
 namespace Sokoban.Model;
 
 public class Warehouse
