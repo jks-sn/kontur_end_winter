@@ -7,86 +7,74 @@ using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Model.GameObjects;
 
 namespace Sokoban.Model;
-public class Level
+public class Level(LevelData data)
 {
-    public LevelData Data { get;  private set; }
-    public IReadOnlyList<GameObject> Objects => _objects;
-    
-    private readonly List<GameObject> _objects = [];
+    public LevelData Data { get;  private set; } = data ?? throw new ArgumentNullException(nameof(data));
 
-    public Level(LevelData data)
-    {
-        Data = data ?? throw new ArgumentNullException(nameof(data));
-    }
+    public Warehouse _Warehouse { get; private set; } = new(data.Width, data.Height);
     
-    public Level(string levelName, Texture2D wallTexture, Texture2D playerTexture, Texture2D boxTexture, Texture2D goalTexture)
+    public void LoadFromLayout(string[] layout)
     {
-        Data = LoadLevelData(levelName); 
-        LoadObjects(wallTexture, playerTexture, boxTexture, goalTexture);
-    }
-    
-    private static LevelData LoadLevelData(string levelName)
-    {
-        if (levelName == "Level 1")
+        for (var y = 0; y < layout.Length; y++)
         {
-            return new LevelData
+            for (var x = 0; x < layout[y].Length; x++)
             {
-                Name = "Level 1",
-                Width = 5,
-                Height = 5,
-                LevelLayout = "#####@" +
-                              "#####$" +
-                              "$###.#" +
-                              ".#####" +
-                              "######"
-            };
-        }
-
-        throw new ArgumentException($"Level {levelName} not found.");
-    }
-    
-    public void LoadObjects(Texture2D wallTexture, Texture2D playerTexture, Texture2D boxTexture, Texture2D goalTexture)
-    {
-        Reset();
-        
-        for (var y = 0; y < Data.Height; y++)
-        {
-            for (var x = 0; x < Data.Width; x++)
-            {
-                var character = Data.LevelLayout[y * Data.Width + x];
-                var position = new Vector2(x * 32, y * 32);
-
-                switch (character)
+                var cell = layout[y][x];
+                switch (cell)
                 {
                     case '#':
-                        _objects.Add(new Wall(position, wallTexture));
-                        break;
-                    case '@':
-                        _objects.Add(new Player(position, playerTexture));
-                        break;
-                    case '$':
-                        _objects.Add(new Box(position, boxTexture));
+                        _Warehouse.SetCell(x, y, GridCell.Wall);
                         break;
                     case '.':
-                        _objects.Add(new Goal(position, goalTexture));
+                        _Warehouse.SetCell(x, y, GridCell.Goal);
+                        break;
+                    case '@':
+                        _Warehouse.SetCell(x, y, GridCell.Player);
+                        break;
+                    case '$':
+                        _Warehouse.SetCell(x, y, GridCell.Box);
+                        break;
+                    case ' ':
+                        _Warehouse.SetCell(x, y, GridCell.Empty);
                         break;
                     default:
-                        break;
+                        throw new ArgumentException($"Неизвестный символ '{cell}' в уровне.");
                 }
             }
         }
     }
-    
-    public void Draw(SpriteBatch spriteBatch)
+    public void Draw(SpriteBatch spriteBatch, Texture2D wallTexture, Texture2D goalTexture, Texture2D boxTexture, Texture2D playerTexture)
     {
-        foreach (var gameObject in _objects)
+        const int cellSize = 32;
+
+        for (var y = 0; y < _Warehouse.Height; y++)
         {
-            gameObject.Draw(spriteBatch);
+            for (var x = 0; x < _Warehouse.Width; x++)
+            {
+                var cell = _Warehouse.GetCell(x, y);
+                var position = new Vector2(x * cellSize, y * cellSize);
+
+                switch (cell)
+                {
+                    case GridCell.Wall:
+                        spriteBatch.Draw(wallTexture, position, Color.White);
+                        break;
+                    case GridCell.Goal:
+                        spriteBatch.Draw(goalTexture, position, Color.White);
+                        break;
+                    case GridCell.Box:
+                        spriteBatch.Draw(boxTexture, position, Color.White);
+                        break;
+                    case GridCell.Player:
+                        spriteBatch.Draw(playerTexture, position, Color.White);
+                        break;
+                    case GridCell.Empty:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
         }
     }
 
-    public void Reset()
-    {
-        _objects.Clear();
-    }
 }

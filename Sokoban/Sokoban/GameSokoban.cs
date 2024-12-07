@@ -1,4 +1,6 @@
-﻿using System;
+﻿//Sokoban/GameSokoban.cs
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -15,9 +17,12 @@ public class GameSokoban : Microsoft.Xna.Framework.Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private Player _player;
-    private List<LevelData> _levels;
     private Level _level;
-    private Texture2D _wallTexture, _playerTexture, _boxTexture, _goalTexture;
+    private ContentManager _contentManager;
+    
+    // private List<LevelData> _levels;
+    
+    private bool _isMoving = false;
     public GameSokoban()
     {
         _graphics = new GraphicsDeviceManager(this)
@@ -37,31 +42,48 @@ public class GameSokoban : Microsoft.Xna.Framework.Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-        // Загрузка текстур
-        _wallTexture = Content.Load<Texture2D>("wall");
-        _playerTexture = Content.Load<Texture2D>("player");
-        _boxTexture = Content.Load<Texture2D>("block");
-        _goalTexture = Content.Load<Texture2D>("goal");
+        _contentManager.LoadContent();
         
-        _level = new Level("Level 1", _wallTexture, _playerTexture, _boxTexture, _goalTexture);
-        
-        _player = _level.Objects.OfType<Player>().FirstOrDefault();
-        if (_player == null)
-        {
-            throw new InvalidOperationException("Level does not contain a Player object.");
-        }
+        _level = LevelLoader.LoadFromFile("Content/Levels/Level1.txt");
+        _player = new Player(new Vector2(100, 100), _contentManager.PlayerTexture);
     }
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-            Keyboard.GetState().IsKeyDown(Keys.Escape))
+        var keyboardState = Keyboard.GetState();
+        if (keyboardState.IsKeyDown(Keys.Escape))
         {
             Exit();
         }
 
-        InputHandler.HandleInput(gameTime, _player);
+        if (!keyboardState.IsKeyDown(Keys.Up) && !keyboardState.IsKeyDown(Keys.Down) && !keyboardState.IsKeyDown(Keys.Left) && !keyboardState.IsKeyDown(Keys.Right))
+        {
+            _isMoving = false;
+        }
+
+        if (!_isMoving)
+        {
+            if (keyboardState.IsKeyDown(Keys.Up))
+            {
+                _player.Move(0, -1, _level._Warehouse);
+                _isMoving = true;
+            }
+            else if (keyboardState.IsKeyDown(Keys.Down))
+            {
+                _player.Move(0, 1, _level._Warehouse);
+                _isMoving = true;
+            }
+            else if (keyboardState.IsKeyDown(Keys.Left))
+            {
+                _player.Move(-1, 0, _level._Warehouse);
+                _isMoving = true;
+            }
+            else if (keyboardState.IsKeyDown(Keys.Right))
+            {
+                _player.Move(1, 0, _level._Warehouse);
+                _isMoving = true;
+            }
+        }
 
         base.Update(gameTime);
     }
@@ -82,11 +104,33 @@ public class GameSokoban : Microsoft.Xna.Framework.Game
     
     protected override void UnloadContent()
     {
-        _wallTexture.Dispose();
-        _playerTexture.Dispose();
-        _boxTexture.Dispose();
-        _goalTexture.Dispose();
+        _contentManager.WallTexture.Dispose();
+        _contentManager.PlayerTexture.Dispose();
+        _contentManager.BoxTexture.Dispose();
+        _contentManager.GoalTexture.Dispose();
 
         base.UnloadContent();
+    }
+}
+
+public class ContentManager
+{
+    private readonly Microsoft.Xna.Framework.Game _game;
+    public Texture2D WallTexture { get; private set; }
+    public Texture2D PlayerTexture { get; private set; }
+    public Texture2D BoxTexture { get; private set; }
+    public Texture2D GoalTexture { get; private set; }
+
+    public ContentManager(Microsoft.Xna.Framework.Game game)
+    {
+        _game = game;
+    }
+
+    public void LoadContent()
+    {
+        WallTexture = _game.Content.Load<Texture2D>("wall");
+        PlayerTexture = _game.Content.Load<Texture2D>("player");
+        BoxTexture = _game.Content.Load<Texture2D>("box");
+        GoalTexture = _game.Content.Load<Texture2D>("goal");
     }
 }
