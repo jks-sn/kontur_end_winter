@@ -5,7 +5,7 @@
 //
 // namespace Sokoban.Core;
 //
-// public class GameLogic(_Warehouse warehouse, Player player, List<Box> boxes, List<Goal> goals)
+// public class GameLogic(warehouse warehouse, Player player, List<Box> boxes, List<Goal> goals)
 // {
 //     public bool CanMovePlayer(int dx, int dy)
 //     {

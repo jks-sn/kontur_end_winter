@@ -2,21 +2,19 @@
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Sokoban.Utils;
 
 namespace Sokoban.Model.GameObjects;
 
-public class Wall : GameObject
+public class Wall(GridPosition position) : GameObject(position)
 {
-    private readonly Texture2D _texture;
-
-    public Wall(Vector2 position, Texture2D texture)
-    {
-        Position = position;
-        _texture = texture;
-    }
-
     public override void Draw(SpriteBatch spriteBatch)
     {
-        spriteBatch.Draw(_texture, Position, Color.Gray);
+        spriteBatch.Draw(ContentManager.WallTexture, GetPixelPosition(), Color.Gray);
+    }
+    
+    public void Move(int deltaX, int deltaY)
+    {
+        Position = new GridPosition(Position.X + deltaX, Position.Y + deltaY);
     }
 }

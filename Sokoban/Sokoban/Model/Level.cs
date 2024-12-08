@@ -5,76 +5,98 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Model.GameObjects;
+using Sokoban.Utils;
 
 namespace Sokoban.Model;
-public class Level(LevelData data)
+public class Level(int width, int height)
 {
-    public LevelData Data { get;  private set; } = data ?? throw new ArgumentNullException(nameof(data));
-
-    public Warehouse _Warehouse { get; private set; } = new(data.Width, data.Height);
+    public string Name { get; set; }
+    public string LevelLayout { get; set; }
+    public Warehouse warehouse { get; } = new(width, height);
     
-    public void LoadFromLayout(string[] layout)
+    private Player _player;
+    private readonly List<Box> _boxes = [];          
+    
+    public void SetPlayer(Player player)
     {
-        for (var y = 0; y < layout.Length; y++)
-        {
-            for (var x = 0; x < layout[y].Length; x++)
-            {
-                var cell = layout[y][x];
-                switch (cell)
-                {
-                    case '#':
-                        _Warehouse.SetCell(x, y, GridCell.Wall);
-                        break;
-                    case '.':
-                        _Warehouse.SetCell(x, y, GridCell.Goal);
-                        break;
-                    case '@':
-                        _Warehouse.SetCell(x, y, GridCell.Player);
-                        break;
-                    case '$':
-                        _Warehouse.SetCell(x, y, GridCell.Box);
-                        break;
-                    case ' ':
-                        _Warehouse.SetCell(x, y, GridCell.Empty);
-                        break;
-                    default:
-                        throw new ArgumentException($"Неизвестный символ '{cell}' в уровне.");
-                }
-            }
-        }
+        _player = player;
+        warehouse.SetCell(_player.Position, GridCell.Player);
     }
-    public void Draw(SpriteBatch spriteBatch, Texture2D wallTexture, Texture2D goalTexture, Texture2D boxTexture, Texture2D playerTexture)
-    {
-        const int cellSize = 32;
 
-        for (var y = 0; y < _Warehouse.Height; y++)
+    public void AddBox(Box box)
+    {
+        _boxes.Add(box);
+        warehouse.SetCell(box.Position, GridCell.Box);
+    }
+    
+    public Player GetPlayer() => _player;
+    public IEnumerable<Box> GetBoxes() => _boxes;
+    
+    public bool MovePlayer(int deltaX, int deltaY)
+    {
+        var currentPosition = _player.Position;
+        var newPosition = new GridPosition(currentPosition.X + deltaX, currentPosition.Y + deltaY);
+        
+        if (warehouse.GetCell(newPosition) == GridCell.Wall)
         {
-            for (var x = 0; x < _Warehouse.Width; x++)
+            return false;
+        }
+        
+        var box = _boxes.Find(b => b.Position.Equals(newPosition));
+        if (box != null)
+        {
+            var newBoxPosition = new GridPosition(newPosition.X + deltaX, newPosition.Y + deltaY);
+            
+            if (warehouse.GetCell(newBoxPosition) != GridCell.Empty || _boxes.Exists(b => b.Position.Equals(newBoxPosition)))
             {
-                var cell = _Warehouse.GetCell(x, y);
-                var position = new Vector2(x * cellSize, y * cellSize);
+                return false;
+            }
+            
+            warehouse.SetCell(box.Position, GridCell.Empty);
+            box.Move(deltaX, deltaY);
+            warehouse.SetCell(box.Position, GridCell.Box);
+        }
+        
+        if (warehouse.GetCell(newPosition) != GridCell.Empty && warehouse.GetCell(newPosition) != GridCell.Goal)
+        {
+            return false;
+        }
+        
+        warehouse.SetCell(_player.Position, GridCell.Empty);
+        _player.Move(deltaX, deltaY);
+        warehouse.SetCell(_player.Position, GridCell.Player);
+
+        return true;
+    }
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        for (var y = 0; y < warehouse.Height; y++)
+        {
+            for (var x = 0; x < warehouse.Width; x++)
+            {
+                var position = new GridPosition(x, y);
+                var cell = warehouse.GetCell(position);
 
                 switch (cell)
                 {
+                    case GridCell.Empty:
+                        spriteBatch.Draw(ContentManager.BackgroundTexture, position.ToVector(), Color.White);
+                        break;
                     case GridCell.Wall:
-                        spriteBatch.Draw(wallTexture, position, Color.White);
+                        spriteBatch.Draw(ContentManager.WallTexture, position.ToVector(), Color.White);
                         break;
                     case GridCell.Goal:
-                        spriteBatch.Draw(goalTexture, position, Color.White);
+                        spriteBatch.Draw(ContentManager.GoalTexture, position.ToVector(), Color.White);
                         break;
-                    case GridCell.Box:
-                        spriteBatch.Draw(boxTexture, position, Color.White);
-                        break;
-                    case GridCell.Player:
-                        spriteBatch.Draw(playerTexture, position, Color.White);
-                        break;
-                    case GridCell.Empty:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
             }
         }
+        
+        foreach (var box in _boxes)
+        {
+            box.Draw(spriteBatch);
+        }
+        
+        _player?.Draw(spriteBatch);
     }
-
 }

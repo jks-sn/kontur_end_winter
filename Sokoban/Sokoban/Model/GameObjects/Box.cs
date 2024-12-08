@@ -2,26 +2,19 @@
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Sokoban.Utils;
 
 namespace Sokoban.Model.GameObjects;
-public class Box : GameObject
+public class Box(GridPosition position) : GameObject(position)
 {
-    private readonly Texture2D _texture;
-
-    public Box(Vector2 position)
+    
+    public override void Draw(SpriteBatch spriteBatch)
     {
-        Position = position;
-    }
-
-    public override void Draw(SpriteBatch spriteBatch, Texture2D texture)
-    {
-        spriteBatch.Draw(_texture, Position, Color.Brown);
+        spriteBatch.Draw(ContentManager.BoxTexture, GetPixelPosition(), Color.Brown);
     }
     
     public void Move(int deltaX, int deltaY)
     {
-        var newX = (int)Position.X / 32 + deltaX;
-        var newY = (int)Position.Y / 32 + deltaY;
-        Position += new Vector2(newX * 32, newY * 32);
+        Position = new GridPosition(Position.X + deltaX, Position.Y + deltaY);
     }
 }

@@ -14,35 +14,46 @@ public static class LevelLoader
 {
     public static Level LoadFromFile(string filePath)
     {
-        // Читаем текстовый файл в строки
-        var layout = ReadLevelFromFile(filePath);
-
-        // Предполагаем, что ширина и высота уровня известны
-        var height = layout.Length;
-        var width = layout[0].Length;
-        
-        // Создаем уровень
-        var level = new Level(new LevelData { Name = "Loaded Level", Width = width, Height = height });
-        level.LoadFromLayout(layout);
-
-        return level;
-    }
-    
-    private static string[] ReadLevelFromFile(string filePath)
-    {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException($"Файл {filePath} не найден.");
-        }
-        
         var lines = File.ReadAllLines(filePath);
-        
         var width = lines[0].Length;
+        
         if (lines.Any(line => line.Length != width))
         {
-            throw new InvalidOperationException("Все строки в уровне должны быть одинаковой длины.");
+            throw new InvalidOperationException("All lines in the level file must have the same length.");
         }
+        var height = lines.Length;
+        
+        var level = new Level(width, height);
 
-        return lines;
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var cell = lines[y][x];
+                var position = new GridPosition(x, y);
+
+                switch (cell)
+                {
+                    case ' ':
+                        level.warehouse.SetCell(position, GridCell.Empty);
+                        break;
+                    case '#':
+                        level.warehouse.SetCell(position, GridCell.Wall);
+                        break;
+                    case '@':
+                        level.warehouse.SetCell(position, GridCell.Player);
+                        level.SetPlayer(new Player(position));
+                        break;
+                    case '$':
+                        level.warehouse.SetCell(position, GridCell.Box);
+                        level.AddBox(new Box(position));
+                        break;
+                    case '.':
+                        level.warehouse.SetCell(position, GridCell.Goal);
+                        break;
+                }
+            }
+        }
+        return level;
     }
 }
