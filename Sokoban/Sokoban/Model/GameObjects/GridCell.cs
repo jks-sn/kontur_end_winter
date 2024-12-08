@@ -5,8 +5,5 @@ namespace Sokoban.Model.GameObjects;
     {
         Empty,
         Wall,
-        Player,
-        Box,
-        Goal,
-        BoxOnGoal
+        Goal
     }

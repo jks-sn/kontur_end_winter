@@ -19,19 +19,32 @@ public class Warehouse(int width, int height)
 
     public void SetCell(GridPosition position, GridCell cell)
     {
+        if (position.X < 0 || position.Y < 0 || position.X >= Width || position.Y >= Height)
+        {
+            throw new ArgumentOutOfRangeException("Координаты выходят за пределы склада");
+        }
+        
         Grid[position.Y, position.X] = cell;
     }
     public GridCell GetCell(GridPosition position)
     {
         if (position.X < 0 || position.Y < 0 || position.X >= Width || position.Y >= Height)
+        {
             throw new ArgumentOutOfRangeException("Координаты выходят за пределы склада");
+        }
 
         return Grid[position.Y, position.X];
     }
     
     public bool CanMoveTo(GridPosition position)
     {
-        return Grid[position.Y, position.X] == GridCell.Empty || Grid[position.Y, position.X] == GridCell.Goal;
+        if (position.X < 0 || position.Y < 0 || position.X >= Width || position.Y >= Height)
+        {
+            return false;
+        }
+
+        var cell = Grid[position.Y, position.X];
+        return cell is GridCell.Empty or GridCell.Goal;
     }
     
     // public bool CheckVictory()

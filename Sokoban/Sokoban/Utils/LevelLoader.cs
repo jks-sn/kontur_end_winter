@@ -21,8 +21,8 @@ public static class LevelLoader
         {
             throw new InvalidOperationException("All lines in the level file must have the same length.");
         }
-        var height = lines.Length;
         
+        var height = lines.Length;
         var level = new Level(width, height);
 
         for (var y = 0; y < height; y++)
@@ -34,22 +34,22 @@ public static class LevelLoader
 
                 switch (cell)
                 {
-                    case ' ':
-                        level.warehouse.SetCell(position, GridCell.Empty);
-                        break;
                     case '#':
                         level.warehouse.SetCell(position, GridCell.Wall);
                         break;
                     case '@':
-                        level.warehouse.SetCell(position, GridCell.Player);
                         level.SetPlayer(new Player(position));
+                        level.warehouse.SetCell(position, GridCell.Empty);
                         break;
                     case '$':
-                        level.warehouse.SetCell(position, GridCell.Box);
                         level.AddBox(new Box(position));
+                        level.warehouse.SetCell(position, GridCell.Empty);
                         break;
                     case '.':
                         level.warehouse.SetCell(position, GridCell.Goal);
+                        break;
+                    default:
+                        level.warehouse.SetCell(position, GridCell.Empty);
                         break;
                 }
             }

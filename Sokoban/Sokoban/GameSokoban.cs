@@ -44,6 +44,10 @@ public class GameSokoban : Microsoft.Xna.Framework.Game
         ContentManager.LoadContent();
         
         _level = LevelLoader.LoadFromFile("Content/Levels/Level1.txt");
+        
+        _graphics.PreferredBackBufferWidth = _level.warehouse.Width * Warehouse.CellSize;
+        _graphics.PreferredBackBufferHeight = _level.warehouse.Height * Warehouse.CellSize;
+        _graphics.ApplyChanges();
     }
 
     protected override void Update(GameTime gameTime)

@@ -9,9 +9,9 @@ public abstract class GameObject(GridPosition position)
     public GridPosition Position { get; set;} = position;
 
     public abstract void Draw(SpriteBatch spriteBatch);
-    
-    public Vector2 GetPixelPosition()
+
+    public void Move(int deltaX, int deltaY)
     {
-        return Position.ToVector();
+        Position = new GridPosition(Position.X + deltaX, Position.Y + deltaY);
     }
 }

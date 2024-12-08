@@ -19,6 +19,11 @@ public class GridPosition(int x, int y)
         return new Vector2(X * Warehouse.CellSize, Y * Warehouse.CellSize);
     }
 
+    public Rectangle ToRectangle()
+    {
+        return new Rectangle(X, Y, Warehouse.CellSize, Warehouse.CellSize);
+    }
+
     public override bool Equals(object obj)
     {
         return obj is GridPosition position && X == position.X && Y == position.Y;

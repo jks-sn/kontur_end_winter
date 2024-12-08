@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Model.GameObjects;
@@ -17,16 +18,17 @@ public class Level(int width, int height)
     private Player _player;
     private readonly List<Box> _boxes = [];          
     
+    public bool IsVictory => _boxes.Count == 0;
+
+    
     public void SetPlayer(Player player)
     {
         _player = player;
-        warehouse.SetCell(_player.Position, GridCell.Player);
     }
 
     public void AddBox(Box box)
     {
         _boxes.Add(box);
-        warehouse.SetCell(box.Position, GridCell.Box);
     }
     
     public Player GetPlayer() => _player;
@@ -34,10 +36,20 @@ public class Level(int width, int height)
     
     public bool MovePlayer(int deltaX, int deltaY)
     {
-        var currentPosition = _player.Position;
-        var newPosition = new GridPosition(currentPosition.X + deltaX, currentPosition.Y + deltaY);
-        
-        if (warehouse.GetCell(newPosition) == GridCell.Wall)
+        if (IsVictory)
+        {
+            return false;
+        }
+        var moved = TryMoveObject(_player, deltaX, deltaY);
+        return moved;
+    }
+    
+    private bool TryMoveObject(GameObject obj, int dx, int dy)
+    {
+        var currentPosition = obj.Position;
+        var newPosition = new GridPosition(currentPosition.X + dx, currentPosition.Y + dy);
+
+        if (!IsMoveAvailable(newPosition))
         {
             return false;
         }
@@ -45,29 +57,23 @@ public class Level(int width, int height)
         var box = _boxes.Find(b => b.Position.Equals(newPosition));
         if (box != null)
         {
-            var newBoxPosition = new GridPosition(newPosition.X + deltaX, newPosition.Y + deltaY);
-            
-            if (warehouse.GetCell(newBoxPosition) != GridCell.Empty || _boxes.Exists(b => b.Position.Equals(newBoxPosition)))
-            {
+            if (!TryMoveObject(box, dx, dy))
                 return false;
-            }
-            
-            warehouse.SetCell(box.Position, GridCell.Empty);
-            box.Move(deltaX, deltaY);
-            warehouse.SetCell(box.Position, GridCell.Box);
         }
         
-        if (warehouse.GetCell(newPosition) != GridCell.Empty && warehouse.GetCell(newPosition) != GridCell.Goal)
-        {
-            return false;
-        }
-        
-        warehouse.SetCell(_player.Position, GridCell.Empty);
-        _player.Move(deltaX, deltaY);
-        warehouse.SetCell(_player.Position, GridCell.Player);
-
+        obj.Move(dx, dy);
         return true;
     }
+    
+    private bool IsMoveAvailable(GridPosition position)
+    {
+        if (position.X < 0 || position.Y < 0 || position.X >= warehouse.Width || position.Y >= warehouse.Height)
+            return false;
+
+        var cell = warehouse.GetCell(position);
+        return cell is GridCell.Empty or GridCell.Goal;
+    }
+    
     public void Draw(SpriteBatch spriteBatch)
     {
         for (var y = 0; y < warehouse.Height; y++)
@@ -80,13 +86,15 @@ public class Level(int width, int height)
                 switch (cell)
                 {
                     case GridCell.Empty:
-                        spriteBatch.Draw(ContentManager.BackgroundTexture, position.ToVector(), Color.White);
+                        spriteBatch.Draw(ContentManager.BackgroundTexture, position.ToRectangle(), Color.White);
                         break;
                     case GridCell.Wall:
-                        spriteBatch.Draw(ContentManager.WallTexture, position.ToVector(), Color.White);
+                        spriteBatch.Draw(ContentManager.WallTexture, position.ToRectangle(), Color.White);
                         break;
                     case GridCell.Goal:
-                        spriteBatch.Draw(ContentManager.GoalTexture, position.ToVector(), Color.White);
+                        spriteBatch.Draw(ContentManager.GoalTexture, position.ToRectangle(), Color.White);
+                        break;
+                    default:
                         break;
                 }
             }
